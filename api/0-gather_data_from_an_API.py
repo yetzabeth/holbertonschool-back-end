@@ -1,7 +1,4 @@
 #!/usr/bin/python3
-"""
-Gather data from an API
-"""
 import json
 import requests
 from sys import argv
@@ -16,18 +13,16 @@ if __name__ == '__main__':
         if elements.get('id') == int(argv[1]):
             name = elements.get('name')
             break
+    else:
+        print("Error: User with ID {} not found.".format(argv[1]))
+        exit(1)
 
-    list = []
-    for dict in todo:
-        if dict.get('userId') == int(argv[1]):
-            list.append(dict)
-
-    true_elements = []
-    for completed in list:
-        if completed.get('completed'):
-            true_elements.append(completed)
+    task_list = [task for task in todo if task.get('userId') == int(argv[1])]
+    completed_tasks_count = len([task for task in task_list if task.get('completed')])
 
     print('Employee {} is done with tasks({}/{}):'.
-          format(name, len(true_elements), len(list)))
-    for task in true_elements:
-        print('\t {}'.format(task.get('title')))
+          format(name, completed_tasks_count, len(task_list)))
+
+    for task in task_list:
+        if task.get('completed'):
+            print('\t{}'.format(task.get('title')))
