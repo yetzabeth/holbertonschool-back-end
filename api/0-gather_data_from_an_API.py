@@ -1,28 +1,57 @@
 #!/usr/bin/python3
-import json
+"""
+Gather data from an API
+"""
+
 import requests
 from sys import argv
 
 
-if __name__ == '__main__':
-    todo = requests.get('https://jsonplaceholder.typicode.com/todos').json()
-    user = requests.get('https://jsonplaceholder.typicode.com/users').json()
+def get_todo_list_progress(employee_id):
+    """
+    Retrieve and display TODO list progress for a given employee ID.
 
-    name = ""
-    for elements in user:
-        if elements.get('id') == int(argv[1]):
-            name = elements.get('name')
-            break
-    else:
-        print("Error: User with ID {} not found.".format(argv[1]))
-        exit(1)
+    Args:
+        employee_id (int): The ID of the employee.
 
-    task_list = [task for task in todo if task.get('userId') == int(argv[1])]
-    completed_tasks_count = len([task for task in task_list if task.get('completed')])
+    Returns:
+        None
+    """
+    # Make a GET request to fetch the TODO list and user data from the JSONPlaceholder API
+    todo_url = f'https://jsonplaceholder.typicode.com/todos?userId={employee_id}'
+    user_url = f'https://jsonplaceholder.typicode.com/users/{employee_id}'
 
-    print('Employee {} is done with tasks({}/{}):'.
-          format(name, completed_tasks_count, len(task_list)))
+    todo_response = requests.get(todo_url)
+    user_response = requests.get(user_url)
 
-    for task in task_list:
+    # Check if the API requests were successful
+    if todo_response.status_code != 200 or user_response.status_code != 200:
+        print("Error: Unable to fetch data from the API.")
+        return
+
+    todo = todo_response.json()
+    user = user_response.json()
+
+    # Extract user information
+    employee_name = user.get('name')
+
+    # Calculate TODO list progress
+    total_tasks = len(todo)
+    completed_tasks = sum(1 for task in todo if task.get('completed'))
+
+    # Print the TODO list progress
+    print(f'Employee {employee_name} is done with tasks({completed_tasks}/{total_tasks}):')
+
+    # Print the titles of completed tasks with indentation
+    for task in todo:
         if task.get('completed'):
-            print('\t{}'.format(task.get('title')))
+            print(f'    {task.get("title")}')
+
+
+if __name__ == '__main__':
+    # Check if the correct number of command-line arguments is provided
+    if len(argv) != 2:
+        print("Usage: python3 script_name.py <employee_id>")
+    else:
+        # Call the function with the provided employee ID
+        get_todo_list_progress(int(argv[1]))
