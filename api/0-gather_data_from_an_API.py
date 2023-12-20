@@ -8,28 +8,23 @@ import requests
 from sys import argv
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """Script for task0"""
-    if len(argv) != 2 or not argv[1].isdigit():
-        print("Usage: {} EMPLOYEE_ID".format(argv[0]))
-    else:
-        employee_id = int(argv[1])
-        base_url = "https://jsonplaceholder.typicode.com"
+    user_request = requests.get(
+        'http://jsonplaceholder.typicode.com/users/{}'.format(argv[1])).json()
+    todos_req = requests.get(
+        'http://jsonplaceholder.typicode.com/todos').json()
+    usr_todos_list = [x for x in todos_req if x.get(
+        'userId') == int(argv[1])]
+    # (x) Elemento dentro de los elementos de todos_request solamente si
+    user_completed_list = [
+        x for x in usr_todos_list if x.get('completed') is True]
+    # Recorremos la lista de todos nuevamente para filtrar tareas completadas
 
-        # Fetch user info
-        user_info_url = "{}/users/{}".format(base_url, employee_id)
-        user_info = requests.get(user_info_url).json()
-
-        # Fetch TODO list
-        todo_url = "{}/todos?userId={}".format(base_url, employee_id)
-        todo_list = requests.get(todo_url).json()
-
-        # Filter completed tasks
-        completed_tasks = [task for task in todo_list if task['completed']]
-
-        # Print results
-        print("Employee {} is done with tasks({}/{}):".format(
-            user_info['name'], len(completed_tasks), len(todo_list)))
-
-        for task in completed_tasks:
-            print("\t {}".format(task['title']))
+    print("Employee {} is done with tasks({}/{}):"
+          .format(
+              user_request.get('name'),
+              len(user_completed_list),
+              len(usr_todos_list)))
+    for task in user_completed_list:
+        print("\t " + task.get('title'))
